@@ -1,0 +1,11 @@
+{
+  "name": "SocketioRealTime",
+  "version": "0.0.1",
+  "description": "SocketioRealTime",
+  "dependencies": {
+    "socket.io": "latest",
+    "moniker": "latest",
+    "moment": "~2.5.1"
+  },
+  "author": "dev"
+}

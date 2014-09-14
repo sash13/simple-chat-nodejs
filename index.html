@@ -1,0 +1,152 @@
+<html>
+<head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      function addslashes( str ) {
+          return (str + '').replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+      }
+      function randomString(len, charSet) {
+          charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+          var randomString = '';
+          for (var i = 0; i < len; i++) {
+    	        var randomPoz = Math.floor(Math.random() * charSet.length);
+    	        randomString += charSet.substring(randomPoz,randomPoz+1);
+          }
+          return randomString;
+        }
+      
+        $(function(){
+            var messages = [];
+            var user = '';
+          /*var iosocket = io.connect('http://openidev-51889.euw1.nitrousbox.com:8888/',
+                                      { rememberTransport: false, transports: ['WebSocket', 'Flash Socket', 'AJAX long-polling']});*/
+            var iosocket = io.connect();
+            var field = document.getElementById("field");
+            //var sendButton = document.getElementById("send");
+            var content = document.getElementById("content");
+            var client = document.getElementById("client");
+            var status = document.getElementById("status");
+            var users = document.getElementById("users");
+          
+            setInterval(function(){
+                    var epoch = new Date().getTime();
+                    iosocket.emit('ping', {time: epoch});
+            },4000);
+          
+            iosocket.on('connect', function () {
+                status.innerHTML = 'Status: Connected';
+
+                iosocket.on('message', function(message) {
+                    if(message.text) {
+                        messages.unshift(message);
+                        updateChat();       
+                    }
+                  //$('#incomingChatMessages').append('<b>' + message.client +'</b>: ' + message.text + '</br>'); 
+                    console.log(message);
+                });
+                iosocket.on('disconnect', function() {
+                    status.innerHTML = 'Status: Disconected';
+                });
+                iosocket.on('pong', function(data) {
+                  //console.log(data);
+                });
+                iosocket.on('welcome', function(data) {
+                  user = data.name;
+                  client.value = data.name;
+                });
+               iosocket.on('load history', function(data) {
+                  messages = data;
+                  updateChat();  
+                });
+               iosocket.on('coming', function(data) {
+                  value = 'User <b>' + data.client + '</b> attached to chat.';
+                  messages.unshift({client:'Info', text: value});
+                  updateChat();  
+                });
+                iosocket.on('rename', function(data) {
+                  value = 'User <b>' + data.oldname + '</b> renamed to:' + data.name;
+                  messages.unshift({client:'Info', text: value});
+                  updateChat();  
+                });
+                iosocket.on('out', function(data) {
+                  value = 'User <b>' + data.client + '</b> exit.';
+                  messages.unshift({client:'Info', text: value});
+                  updateChat();  
+                });
+                iosocket.on('users', function(data) {
+                  html = 'Users: <b>';
+                  for(var i=0; i<data.users.length; i++) {
+                    html+=data.users[i].name+', ';
+                    users.innerHTML = html;
+                  }
+                });
+            });
+          $('#field').keypress(function(event) {
+                if(event.which == 13) {          
+                  /*field.onkeypress=function(e){
+                if(event.keyCode == 13) {*/
+                    event.preventDefault();
+                    hash = randomString(7);
+                    value = addslashes(field.value).slice(0,200);
+                    if(value) {
+                      iosocket.emit('message', {hash: hash, text: value});
+                      messages.unshift({client:'You', hash: hash, text: value, time:moment()});
+                      field.value = '';
+                      updateChat();   
+                    }
+                }               
+           });
+          $('#client').keypress(function(event) {
+                if(event.which == 13) {
+          /*client.onkeypress=function(e){
+                if(event.keyCode == 13) {*/
+                    event.preventDefault();
+                    value = addslashes(client.value);
+                  if(value.indexOf(user) != -1) {}
+                  else {
+                  if(value) {
+                   
+                    messages.unshift({client:'Info', hash: 'pokpok', text: 'You renamed to:' + value});
+                    iosocket.emit('newName', {name: value}); 
+                    updateChat(); 
+                  }
+                  }
+                }               
+           });
+          updateChat = function() {
+                        var html = '';
+                        for(var i=0; i<messages.length; i++) {
+                            //html += '<b>' + (messages[i].client ? messages[i].username : 'Server') + ': </b>';
+                            time = messages[i].time;
+                            html += '[' + moment(time).format('h:mm:ss') + '] ';
+                            html += '<b>' + messages[i].client  + ': </b>';
+                            html += messages[i].text + '<br />';
+                            content.innerHTML = html;
+                        }   
+          };
+            /*$('#outgoingChatMessage').keypress(function(event) {
+                if(event.which == 13) {
+                    event.preventDefault();
+                    hash = randomString(7);
+                    value = addslashes($('#outgoingChatMessage').val())
+                    iosocket.emit('message', {hash: hash, text: value});
+                    $('#incomingChatMessages').append('<b>You</b>: ' + value + '</br>'); 
+                    $('#outgoingChatMessage').val('');
+                }
+            });*/
+        });
+    </script>
+</head>
+<body>
+  Wellcome: <input type="text" id="client">
+<div id="status"></div>
+<div id="users"></div>
+  Perk something:<input type="text" id="field">
+<div></div><br>
+<div id="content"></div>
+
+
+</body>
+</html>
