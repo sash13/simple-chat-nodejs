@@ -16,6 +16,4 @@
     "start": "node app.js"
   },
   "author": "dev"
-
-
 }
