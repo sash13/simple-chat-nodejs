@@ -2,10 +2,18 @@
   "name": "SocketioRealTime",
   "version": "0.0.1",
   "description": "SocketioRealTime",
+  "main": "app.js",
   "dependencies": {
     "socket.io": "latest",
     "moniker": "latest",
     "moment": "~2.5.1"
+  },
+  "engine": {
+    "node": "*",
+    "npm": "*"
+  },
+  "scripts": {
+    "start": "node app.js"
   },
   "author": "dev"
 }
