@@ -3,13 +3,14 @@ var fs = require('fs')
     , socketio = require('socket.io')
     , Moniker = require('moniker')
     , moment = require('moment')
-    , port = 8888;
+    , port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080
+    , ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0';
 
 var server = http.createServer(function(req, res) {
     res.writeHead(200, { 'Content-type': 'text/html'});
     res.end(fs.readFileSync(__dirname + '/index.html'));
 }).listen(port, function() {
-    console.log('Listening at: http://localhost:' + port);
+    console.log('Listening at: http://' + ip + ':' + port);
 });
 
 var io = socketio.listen(server); 
